@@ -27,11 +27,21 @@ Option C (Windows using MinGW):
 
 3. HOW TO LAUNCH
 --------------------------------------------------------------------------------
+OPTION 1: Interactive Terminal Shell
 On macOS / Linux:
     ./minios
 
 On Windows:
     minios.exe
+
+OPTION 2: Interactive Web UI Dashboard (Recommended for Visual Testing)
+Run the built-in UI server:
+    python3 ui/app.py
+
+Then open your browser and navigate to:
+    http://127.0.0.1:5050
+(All modules can be triggered with one click: load sample jobs, compare
+schedulers, allocate/free memory, run Banker's algorithm, and test page/disk)
 
 
 4. STEP-BY-STEP TESTING GUIDE (INTERACTIVE SHELL)

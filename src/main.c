@@ -217,6 +217,9 @@ void handle_disk(char *args) {
 int main(void) {
     char input[512];
     
+    // disable output buffering so pipes and UI communicate in real time
+    setvbuf(stdout, NULL, _IONBF, 0);
+    
     // initialize modules
     init_process_table();
     init_memory();

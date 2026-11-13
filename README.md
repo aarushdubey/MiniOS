@@ -27,11 +27,12 @@ gcc src/*.c -Iinclude -o minios.exe
 
 ## How to Run
 
+### Option 1: Interactive Terminal Shell
 ```bash
 ./minios
 ```
 
-Then use the interactive shell:
+Then use the shell commands:
 ```
 minios> help
 minios> create P1 5 2
@@ -39,6 +40,13 @@ minios> list
 minios> schedule rr
 minios> exit
 ```
+
+### Option 2: Interactive Web UI Dashboard
+To test all OS functionalities visually without typing terminal commands manually:
+```bash
+python3 ui/app.py
+```
+Then open your browser at: **[http://127.0.0.1:5050](http://127.0.0.1:5050)**
 
 ## Project Structure
 
