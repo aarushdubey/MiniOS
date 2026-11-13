@@ -1,6 +1,15 @@
 # MiniOS - Operating System Simulator
 
-A terminal-based operating system simulator written in C that demonstrates core OS functionalities including process management, CPU scheduling, memory allocation, synchronization, page replacement and disk scheduling.
+[![Live Web Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-22c55e?style=for-the-badge&logo=github&logoColor=white)](https://aarushdubey.github.io/MiniOS/)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-3b82f6?style=for-the-badge&logo=github&logoColor=white)](https://codespaces.new/aarushdubey/MiniOS)
+[![C Standard](https://img.shields.io/badge/Language-C99-orange?style=for-the-badge&logo=c)](src/)
+
+> **Live Interactive Web Demo:** **[https://aarushdubey.github.io/MiniOS/](https://aarushdubey.github.io/MiniOS/)**  
+> Test all CPU scheduling algorithms, memory allocation, page replacement, disk scheduling, and deadlock avoidance directly in your browser with zero installation!
+
+---
+
+A modular operating system simulator written in C that demonstrates core OS functionalities including process management, CPU scheduling, memory allocation, synchronization, page replacement, and disk scheduling.
 
 Built as a course project for **CSE302: Operating Systems**.
 

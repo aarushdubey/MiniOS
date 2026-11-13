@@ -89,3 +89,4 @@ All algorithms were verified using standard textbook benchmarks (Silberschatz, G
 
 ## 6. Conclusion
 MiniOS provides a clear, practical demonstration of core operating system abstractions. The implementation strictly adheres to standard C, avoiding external dependencies while delivering both terminal and graphical testing capabilities.
+
