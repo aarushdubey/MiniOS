@@ -29,14 +29,14 @@ function ansiToHtml(text) {
     .replace(/>/g, "&gt;");
 
   safe = safe
-    .replace(/\033\[1;31m/g, '<span class="ansi-red">')
-    .replace(/\033\[1;32m/g, '<span class="ansi-green">')
-    .replace(/\033\[1;33m/g, '<span class="ansi-yellow">')
-    .replace(/\033\[1;34m/g, '<span class="ansi-blue">')
-    .replace(/\033\[1;35m/g, '<span class="ansi-magenta">')
-    .replace(/\033\[1;36m/g, '<span class="ansi-cyan">')
-    .replace(/\033\[1;37m/g, '<span class="ansi-white">')
-    .replace(/\033\[0m/g, '</span>');
+    .replace(/\x1b\[1;31m/g, '<span class="ansi-red">')
+    .replace(/\x1b\[1;32m/g, '<span class="ansi-green">')
+    .replace(/\x1b\[1;33m/g, '<span class="ansi-yellow">')
+    .replace(/\x1b\[1;34m/g, '<span class="ansi-blue">')
+    .replace(/\x1b\[1;35m/g, '<span class="ansi-magenta">')
+    .replace(/\x1b\[1;36m/g, '<span class="ansi-cyan">')
+    .replace(/\x1b\[1;37m/g, '<span class="ansi-white">')
+    .replace(/\x1b\[0m/g, '</span>');
 
   return safe;
 }
@@ -99,10 +99,10 @@ const StandaloneOS = {
     arrival = parseInt(arrival) || 0;
 
     if (isNaN(burst) || burst <= 0) {
-      return "\033[1;31mError: Burst time must be positive\033[0m\n";
+      return "\x1b[1;31mError: Burst time must be positive\x1b[0m\n";
     }
     if (this.processes.some((p) => p.name === name)) {
-      return `\033[1;31mError: Process '${name}' already exists\033[0m\n`;
+      return `\x1b[1;31mError: Process '${name}' already exists\x1b[0m\n`;
     }
 
     const pid = this.processes.length;
@@ -118,14 +118,14 @@ const StandaloneOS = {
       turnaroundTime: 0,
       completionTime: 0,
     });
-    return `\033[1;32mProcess '${name}' created with PID ${pid}\033[0m\n`;
+    return `\x1b[1;32mProcess '${name}' created with PID ${pid}\x1b[0m\n`;
   },
 
   listProcesses() {
     if (this.processes.length === 0) {
-      return "\033[1;33mNo processes in the system.\033[0m\n";
+      return "\x1b[1;33mNo processes in the system.\x1b[0m\n";
     }
-    let out = "\033[1;36m\nPID   Name         Burst    Remaining  Arrival    Priority State     \n\033[0m";
+    let out = "\x1b[1;36m\nPID   Name         Burst    Remaining  Arrival    Priority State     \n\x1b[0m";
     out += "───────────────────────────────────────────────────────────────\n";
     for (const p of this.processes) {
       const pidStr = String(p.pid).padEnd(5);
@@ -144,20 +144,20 @@ const StandaloneOS = {
     pid = parseInt(pid);
     const idx = this.processes.findIndex((p) => p.pid === pid);
     if (idx === -1) {
-      return `\033[1;31mError: Process ${pid} does not exist\033[0m\n`;
+      return `\x1b[1;31mError: Process ${pid} does not exist\x1b[0m\n`;
     }
     this.processes.splice(idx, 1);
-    return `\033[1;32mProcess ${pid} terminated.\033[0m\n`;
+    return `\x1b[1;32mProcess ${pid} terminated.\x1b[0m\n`;
   },
 
   clearProcesses() {
     this.processes = [];
-    return "\033[1;32mAll processes cleared.\033[0m\n";
+    return "\x1b[1;32mAll processes cleared.\x1b[0m\n";
   },
 
   // CPU Schedulers
   buildGanttChart(order, startTimes, endTimes) {
-    let out = "\033[1;36m\nGantt Chart:\n\033[0m ";
+    let out = "\x1b[1;36m\nGantt Chart:\n\x1b[0m ";
     for (let i = 0; i < order.length; i++) {
       let width = Math.max(4, (endTimes[i] - startTimes[i]) * 3);
       out += "─".repeat(width) + " ";
@@ -188,7 +188,7 @@ const StandaloneOS = {
 
   buildResultsTable(procs, algoName) {
     let totalWt = 0, totalTat = 0;
-    let out = `\033[1;36m--- ${algoName} Results ---\n\033[0m`;
+    let out = `\x1b[1;36m--- ${algoName} Results ---\n\x1b[0m`;
     out += "Name     Arrival  Burst      Priority Completion   Turnaround   Waiting     \n";
     out += "────────────────────────────────────────────────────────────────────────\n";
     for (const p of procs) {
@@ -199,12 +199,12 @@ const StandaloneOS = {
     out += "────────────────────────────────────────────────────────────────────────\n";
     const avgTat = (totalTat / procs.length).toFixed(2);
     const avgWt = (totalWt / procs.length).toFixed(2);
-    out += `\033[1;33mAverage Turnaround Time: ${avgTat}\nAverage Waiting Time   : ${avgWt}\n\n\033[0m`;
+    out += `\x1b[1;33mAverage Turnaround Time: ${avgTat}\nAverage Waiting Time   : ${avgWt}\n\n\x1b[0m`;
     return { out, avgWt: parseFloat(avgWt), avgTat: parseFloat(avgTat) };
   },
 
   scheduleFCFS() {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created.\x1b[0m\n";
     const procs = JSON.parse(JSON.stringify(this.processes)).sort((a, b) => a.arrival - b.arrival);
     let curTime = 0, order = [], startTimes = [], endTimes = [];
 
@@ -224,14 +224,14 @@ const StandaloneOS = {
       p.waitingTime = p.turnaroundTime - p.burst;
     }
 
-    let res = "\033[1;35m\n========== FCFS Scheduling ==========\n\033[0m";
+    let res = "\x1b[1;35m\n========== FCFS Scheduling ==========\n\x1b[0m";
     res += this.buildGanttChart(order, startTimes, endTimes);
     const table = this.buildResultsTable(procs, "FCFS");
     return { text: res + table.out, avgWt: table.avgWt, avgTat: table.avgTat };
   },
 
   scheduleSJF() {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created.\x1b[0m\n";
     const procs = JSON.parse(JSON.stringify(this.processes));
     let completed = new Array(procs.length).fill(false);
     let done = 0, curTime = 0, order = [], startTimes = [], endTimes = [];
@@ -260,14 +260,14 @@ const StandaloneOS = {
       done++;
     }
 
-    let res = "\033[1;35m\n========== SJF Scheduling (Non-Preemptive) ==========\n\033[0m";
+    let res = "\x1b[1;35m\n========== SJF Scheduling (Non-Preemptive) ==========\n\x1b[0m";
     res += this.buildGanttChart(order, startTimes, endTimes);
     const table = this.buildResultsTable(procs, "SJF (Non-Preemptive)");
     return { text: res + table.out, avgWt: table.avgWt, avgTat: table.avgTat };
   },
 
   scheduleRR(quantum = 2) {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created.\x1b[0m\n";
     const procs = JSON.parse(JSON.stringify(this.processes)).sort((a, b) => a.arrival - b.arrival);
     let remaining = procs.map((p) => p.burst);
     let curTime = 0, done = 0, queue = [], inQueue = new Array(procs.length).fill(false);
@@ -318,14 +318,14 @@ const StandaloneOS = {
       }
     }
 
-    let res = `\033[1;35m\n========== Round Robin (quantum=${quantum}) ==========\n\033[0m`;
+    let res = `\x1b[1;35m\n========== Round Robin (quantum=${quantum}) ==========\n\x1b[0m`;
     res += this.buildGanttChart(order, startTimes, endTimes);
     const table = this.buildResultsTable(procs, "Round Robin");
     return { text: res + table.out, avgWt: table.avgWt, avgTat: table.avgTat };
   },
 
   schedulePriority() {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created.\x1b[0m\n";
     const procs = JSON.parse(JSON.stringify(this.processes));
     let completed = new Array(procs.length).fill(false);
     let done = 0, curTime = 0, order = [], startTimes = [], endTimes = [];
@@ -354,14 +354,14 @@ const StandaloneOS = {
       done++;
     }
 
-    let res = "\033[1;35m\n========== Priority Scheduling (Non-Preemptive) ==========\n\033[0m";
+    let res = "\x1b[1;35m\n========== Priority Scheduling (Non-Preemptive) ==========\n\x1b[0m";
     res += this.buildGanttChart(order, startTimes, endTimes);
     const table = this.buildResultsTable(procs, "Priority (Non-Preemptive)");
     return { text: res + table.out, avgWt: table.avgWt, avgTat: table.avgTat };
   },
 
   scheduleMLFQ() {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created.\x1b[0m\n";
     const procs = JSON.parse(JSON.stringify(this.processes)).sort((a, b) => a.arrival - b.arrival);
     let q0 = [], q1 = [], q2 = [];
     let remaining = procs.map((p) => p.burst);
@@ -414,7 +414,7 @@ const StandaloneOS = {
       }
     }
 
-    let res = "\033[1;35m\n========== Multilevel Feedback Queue (3 levels) ==========\n\033[0m";
+    let res = "\x1b[1;35m\n========== Multilevel Feedback Queue (3 levels) ==========\n\x1b[0m";
     res += "Queue 0: RR q=1 | Queue 1: RR q=2 | Queue 2: FCFS\n\n";
     res += this.buildGanttChart(order, startTimes, endTimes);
     const table = this.buildResultsTable(procs, "MLFQ");
@@ -422,9 +422,9 @@ const StandaloneOS = {
   },
 
   scheduleCompare() {
-    if (this.processes.length === 0) return "\033[1;31mError: No processes created. Use 'create' first.\033[0m\n";
+    if (this.processes.length === 0) return "\x1b[1;31mError: No processes created. Use 'create' first.\x1b[0m\n";
 
-    let out = "\033[1;35m\n╔══════════════════════════════════════════╗\n║     Comparing All Scheduling Algorithms   ║\n╚══════════════════════════════════════════╝\n\033[0m";
+    let out = "\x1b[1;35m\n╔══════════════════════════════════════════╗\n║     Comparing All Scheduling Algorithms   ║\n╚══════════════════════════════════════════╝\n\x1b[0m";
     const fcfs = this.scheduleFCFS();
     const sjf = this.scheduleSJF();
     const rr = this.scheduleRR(2);
@@ -442,19 +442,19 @@ const StandaloneOS = {
       if (wts[i] < wts[bestIdx]) bestIdx = i;
     }
 
-    out += "\033[1;36m\n╔═══════════════════════════════════════════════════════╗\n";
+    out += "\x1b[1;36m\n╔═══════════════════════════════════════════════════════╗\n";
     out += "║              Algorithm Comparison Summary              ║\n";
     out += "╠═══════════════╦═══════════════════╦═══════════════════╣\n";
     out += "║  Algorithm    ║  Avg Wait Time    ║  Avg Turnaround   ║\n";
-    out += "╠═══════════════╬═══════════════════╬═══════════════════╣\n\033[0m";
+    out += "╠═══════════════╬═══════════════════╬═══════════════════╣\n\x1b[0m";
 
     for (let i = 0; i < 5; i++) {
       let isBest = i === bestIdx;
       let line = `║  ${names[i].padEnd(12)} ║      ${wts[i].toFixed(2).padStart(8)}     ║      ${tats[i].toFixed(2).padStart(8)}     ║\n`;
-      out += isBest ? `\033[1;32m${line}\033[0m` : line;
+      out += isBest ? `\x1b[1;32m${line}\x1b[0m` : line;
     }
-    out += "\033[1;36m╚═══════════════╩═══════════════════╩═══════════════════╝\n\033[0m";
-    out += `\033[1;32m\nBest Average Waiting Time: ${names[bestIdx]} (${wts[bestIdx].toFixed(2)})\n\n\033[0m`;
+    out += "\x1b[1;36m╚═══════════════╩═══════════════════╩═══════════════════╝\n\x1b[0m";
+    out += `\x1b[1;32m\nBest Average Waiting Time: ${names[bestIdx]} (${wts[bestIdx].toFixed(2)})\n\n\x1b[0m`;
     return out;
   },
 
@@ -462,10 +462,10 @@ const StandaloneOS = {
   memAlloc(pname, size, policy) {
     size = parseInt(size);
     if (isNaN(size) || size <= 0 || size > 1024) {
-      return "\033[1;31mError: Invalid memory size (must be 1-1024 MB)\033[0m\n";
+      return "\x1b[1;31mError: Invalid memory size (must be 1-1024 MB)\x1b[0m\n";
     }
     if (this.memoryBlocks.some((b) => b.allocated && b.processName === pname)) {
-      return `\033[1;31mError: '${pname}' already has memory allocated\033[0m\n`;
+      return `\x1b[1;31mError: '${pname}' already has memory allocated\x1b[0m\n`;
     }
 
     let chosenIdx = -1;
@@ -492,7 +492,7 @@ const StandaloneOS = {
     }
 
     if (chosenIdx === -1) {
-      return `\033[1;31mError: Not enough contiguous memory for ${size} MB\033[0m\n`;
+      return `\x1b[1;31mError: Not enough contiguous memory for ${size} MB\x1b[0m\n`;
     }
 
     const block = this.memoryBlocks[chosenIdx];
@@ -515,13 +515,13 @@ const StandaloneOS = {
       });
     }
 
-    return `\033[1;32m  [${policyName}] Allocated at offset ${offset}\nAllocated ${size} MB to '${pname}'\033[0m\n`;
+    return `\x1b[1;32m  [${policyName}] Allocated at offset ${offset}\nAllocated ${size} MB to '${pname}'\x1b[0m\n`;
   },
 
   memFree(pname) {
     const idx = this.memoryBlocks.findIndex((b) => b.allocated && b.processName === pname);
     if (idx === -1) {
-      return `\033[1;31mError: No memory allocated to '${pname}'\033[0m\n`;
+      return `\x1b[1;31mError: No memory allocated to '${pname}'\x1b[0m\n`;
     }
     this.memoryBlocks[idx].allocated = false;
     this.memoryBlocks[idx].processName = "";
@@ -535,11 +535,11 @@ const StandaloneOS = {
         i++;
       }
     }
-    return `\033[1;32mFreed memory for '${pname}'\033[0m\n`;
+    return `\x1b[1;32mFreed memory for '${pname}'\x1b[0m\n`;
   },
 
   memStatus() {
-    let out = "\033[1;36m\n=== Memory Map (Total: 1024 MB) ===\n\033[0m────────────────────────────────────────────────\n";
+    let out = "\x1b[1;36m\n=== Memory Map (Total: 1024 MB) ===\n\x1b[0m────────────────────────────────────────────────\n";
     let allocTotal = 0, freeTotal = 0;
     for (const b of this.memoryBlocks) {
       const start = String(b.offset).padStart(4);
@@ -547,10 +547,10 @@ const StandaloneOS = {
       const name = b.allocated ? b.processName.padEnd(10) : "---".padEnd(10);
       const sz = String(b.size).padStart(4);
       if (b.allocated) {
-        out += `\033[1;32m  [${start} - ${end}]  ${name}  ${sz} MB  ALLOCATED\033[0m\n`;
+        out += `\x1b[1;32m  [${start} - ${end}]  ${name}  ${sz} MB  ALLOCATED\x1b[0m\n`;
         allocTotal += b.size;
       } else {
-        out += `\033[1;33m  [${start} - ${end}]  ${name}  ${sz} MB  FREE\033[0m\n`;
+        out += `\x1b[1;33m  [${start} - ${end}]  ${name}  ${sz} MB  FREE\x1b[0m\n`;
         freeTotal += b.size;
       }
     }
@@ -559,9 +559,9 @@ const StandaloneOS = {
   },
 
   producerConsumer() {
-    let out = "\033[1;35m\n========== Producer-Consumer Problem ==========\n\033[0m";
+    let out = "\x1b[1;35m\n========== Producer-Consumer Problem ==========\n\x1b[0m";
     out += "Buffer size: 5 | Simulating 10 steps\n\n";
-    out += "\033[1;36mStep   Action       empty    full     mutex     Buffer State\n\033[0m──────────────────────────────────────────────────────────\n";
+    out += "\x1b[1;36mStep   Action       empty    full     mutex     Buffer State\n\x1b[0m──────────────────────────────────────────────────────────\n";
 
     const buffer = ["_", "_", "_", "_", "_"];
     let empty = 5, full = 0, item = 1, inIdx = 0, outIdx = 0;
@@ -575,7 +575,7 @@ const StandaloneOS = {
         buffer[inIdx] = String(item);
         inIdx = (inIdx + 1) % 5;
         full++;
-        out += `${stepStr} \033[1;32mProduce ${String(item).padEnd(4)}\033[0m ${String(empty).padEnd(8)} ${String(full).padEnd(8)} 1         [${buffer.join(",")}]\n`;
+        out += `${stepStr} \x1b[1;32mProduce ${String(item).padEnd(4)}\x1b[0m ${String(empty).padEnd(8)} ${String(full).padEnd(8)} 1         [${buffer.join(",")}]\n`;
         item++;
       } else {
         full--;
@@ -583,7 +583,7 @@ const StandaloneOS = {
         buffer[outIdx] = "_";
         outIdx = (outIdx + 1) % 5;
         empty++;
-        out += `${stepStr} \033[1;33mConsume ${consumed.padEnd(4)}\033[0m ${String(empty).padEnd(8)} ${String(full).padEnd(8)} 1         [${buffer.join(",")}]\n`;
+        out += `${stepStr} \x1b[1;33mConsume ${consumed.padEnd(4)}\x1b[0m ${String(empty).padEnd(8)} ${String(full).padEnd(8)} 1         [${buffer.join(",")}]\n`;
       }
     }
     out += "\n";
@@ -591,38 +591,38 @@ const StandaloneOS = {
   },
 
   bankers() {
-    let out = "\033[1;35m\n========== Banker's Algorithm ==========\n\033[0m";
-    out += "\033[1;36m\n--- Need Matrix (Max - Allocation) ---\n\033[0m";
+    let out = "\x1b[1;35m\n========== Banker's Algorithm ==========\n\x1b[0m";
+    out += "\x1b[1;36m\n--- Need Matrix (Max - Allocation) ---\n\x1b[0m";
     out += "     R0  R1  R2  \n";
     out += "P0:  7   4   3   \nP1:  1   2   2   \nP2:  6   0   0   \nP3:  0   1   1   \nP4:  4   3   1   \n";
-    out += "\033[1;36m\n--- Safety Algorithm Execution ---\n\033[0m";
+    out += "\x1b[1;36m\n--- Safety Algorithm Execution ---\n\x1b[0m";
     out += "  P1 can run: Need(1,2,2) <= Work(3,3,2)\n         Work updated to (5,3,2)\n";
     out += "  P3 can run: Need(0,1,1) <= Work(5,3,2)\n         Work updated to (7,4,3)\n";
     out += "  P4 can run: Need(4,3,1) <= Work(7,4,3)\n         Work updated to (7,4,5)\n";
     out += "  P0 can run: Need(7,4,3) <= Work(7,4,5)\n         Work updated to (7,5,5)\n";
     out += "  P2 can run: Need(6,0,0) <= Work(7,5,5)\n         Work updated to (10,5,7)\n";
-    out += "\033[1;32m\nSystem is in a SAFE state!\n\033[0m";
-    out += "\033[1;32mSafe Sequence: < P1 -> P3 -> P4 -> P0 -> P2 >\n\n\033[0m";
+    out += "\x1b[1;32m\nSystem is in a SAFE state!\n\x1b[0m";
+    out += "\x1b[1;32mSafe Sequence: < P1 -> P3 -> P4 -> P0 -> P2 >\n\n\x1b[0m";
     return out;
   },
 
   pageReplace(algo, frames, ref) {
     frames = parseInt(frames);
     const pages = ref.split(",").map((s) => parseInt(s.trim())).filter((n) => !isNaN(n));
-    if (pages.length === 0) return "\033[1;31mError: Empty reference string\033[0m\n";
+    if (pages.length === 0) return "\x1b[1;31mError: Empty reference string\x1b[0m\n";
 
     if (algo === "compare") {
-      let out = "\033[1;35m\n╔══════════════════════════════════════════╗\n║   Comparing Page Replacement Algorithms   ║\n╚══════════════════════════════════════════╝\n\033[0m";
+      let out = "\x1b[1;35m\n╔══════════════════════════════════════════╗\n║   Comparing Page Replacement Algorithms   ║\n╚══════════════════════════════════════════╝\n\x1b[0m";
       out += this.pageReplace("fifo", frames, ref);
       out += this.pageReplace("lru", frames, ref);
       out += this.pageReplace("optimal", frames, ref);
-      out += "\033[1;36mNote: Optimal is theoretical (requires future knowledge)\n      and gives the minimum possible page faults.\n\n\033[0m";
+      out += "\x1b[1;36mNote: Optimal is theoretical (requires future knowledge)\n      and gives the minimum possible page faults.\n\n\x1b[0m";
       return out;
     }
 
     const title = algo.toUpperCase();
-    let out = `\033[1;35m\n========== ${title} Page Replacement (${frames} frames) ==========\n\033[0m`;
-    out += "\033[1;36mRef      Frames          Status    \n\033[0m─────────────────────────────────\n";
+    let out = `\x1b[1;35m\n========== ${title} Page Replacement (${frames} frames) ==========\n\x1b[0m`;
+    out += "\x1b[1;36mRef      Frames          Status    \n\x1b[0m─────────────────────────────────\n";
 
     let frameArr = new Array(frames).fill("-");
     let faults = 0;
@@ -636,7 +636,7 @@ const StandaloneOS = {
 
       if (inFrame !== -1) {
         lastUsed[inFrame] = i;
-        out += `${refStr} [ ${frameArr.map((v) => String(v).padStart(2)).join(", ")} ]  \033[1;32mHIT\033[0m\n`;
+        out += `${refStr} [ ${frameArr.map((v) => String(v).padStart(2)).join(", ")} ]  \x1b[1;32mHIT\x1b[0m\n`;
       } else {
         faults++;
         if (algo === "fifo") {
@@ -663,23 +663,23 @@ const StandaloneOS = {
             frameArr[replaceIdx] = p;
           }
         }
-        out += `${refStr} [ ${frameArr.map((v) => String(v).padStart(2)).join(", ")} ]  \033[1;31mFAULT\033[0m\n`;
+        out += `${refStr} [ ${frameArr.map((v) => String(v).padStart(2)).join(", ")} ]  \x1b[1;31mFAULT\x1b[0m\n`;
       }
     }
 
     out += "─────────────────────────────────\n";
-    out += `\033[1;33mTotal Page Faults: ${faults} / ${pages.length}\n`;
-    out += `Hit Ratio: ${(((pages.length - faults) / pages.length) * 100).toFixed(2)}%\n\n\033[0m`;
+    out += `\x1b[1;33mTotal Page Faults: ${faults} / ${pages.length}\n`;
+    out += `Hit Ratio: ${(((pages.length - faults) / pages.length) * 100).toFixed(2)}%\n\n\x1b[0m`;
     return out;
   },
 
   diskSchedule(algo, head, reqStr) {
     head = parseInt(head);
     const reqs = reqStr.split(",").map((s) => parseInt(s.trim())).filter((n) => !isNaN(n));
-    if (reqs.length === 0) return "\033[1;31mError: Empty request list\033[0m\n";
+    if (reqs.length === 0) return "\x1b[1;31mError: Empty request list\x1b[0m\n";
 
     if (algo === "compare") {
-      let out = "\033[1;35m\n╔══════════════════════════════════════════╗\n║    Comparing Disk Scheduling Algorithms   ║\n╚══════════════════════════════════════════╝\n\033[0m";
+      let out = "\x1b[1;35m\n╔══════════════════════════════════════════╗\n║    Comparing Disk Scheduling Algorithms   ║\n╚══════════════════════════════════════════╝\n\x1b[0m";
       out += this.diskSchedule("fcfs", head, reqStr);
       out += this.diskSchedule("sstf", head, reqStr);
       out += this.diskSchedule("scan", head, reqStr);
@@ -735,10 +735,10 @@ const StandaloneOS = {
     }
 
     const title = algo.toUpperCase();
-    let out = `\033[1;35m\n========== ${title} Disk Scheduling ==========\n\033[0m`;
+    let out = `\x1b[1;35m\n========== ${title} Disk Scheduling ==========\n\x1b[0m`;
     out += `  Initial Head Position: ${head}\n\n`;
-    out += `\033[1;36m  Seek Order: \033[0m${order.join(" -> ")}\n`;
-    out += `\033[1;33m  Total Seek Time: ${totalSeek} cylinders\n\n\033[0m`;
+    out += `\x1b[1;36m  Seek Order: \x1b[0m${order.join(" -> ")}\n`;
+    out += `\x1b[1;33m  Total Seek Time: ${totalSeek} cylinders\n\n\x1b[0m`;
     return out;
   },
 
@@ -762,7 +762,7 @@ const StandaloneOS = {
       if (algo === "priority") return this.schedulePriority().text;
       if (algo === "mlfq") return this.scheduleMLFQ().text;
       if (algo === "compare") return this.scheduleCompare();
-      return `\033[1;31mUnknown algorithm: ${algo}\033[0m\n`;
+      return `\x1b[1;31mUnknown algorithm: ${algo}\x1b[0m\n`;
     } else if (action === "mem_alloc") {
       return this.memAlloc(parts[1], parts[2], parts[3]);
     } else if (action === "mem_free") {
@@ -771,7 +771,7 @@ const StandaloneOS = {
       return this.memStatus();
     } else if (action === "mem_reset") {
       this.memoryBlocks = [{ offset: 0, size: 1024, allocated: false, processName: "" }];
-      return "\033[1;32mMemory reset.\033[0m\n";
+      return "\x1b[1;32mMemory reset.\x1b[0m\n";
     } else if (action === "producer_consumer") {
       return this.producerConsumer();
     } else if (action === "bankers") {
@@ -781,9 +781,9 @@ const StandaloneOS = {
     } else if (action === "disk") {
       return this.diskSchedule(parts[1], parts[2], parts[3]);
     } else if (action === "help") {
-      return "\033[1;33m\nCommands: create, list, kill, schedule (fcfs|sjf|rr|priority|mlfq|compare), mem_alloc, mem_free, mem_status, producer_consumer, bankers, page, disk, clear_all\033[0m\n";
+      return "\x1b[1;33m\nCommands: create, list, kill, schedule (fcfs|sjf|rr|priority|mlfq|compare), mem_alloc, mem_free, mem_status, producer_consumer, bankers, page, disk, clear_all\x1b[0m\n";
     }
-    return `\033[1;31mUnknown command: '${action}'\033[0m\n`;
+    return `\x1b[1;31mUnknown command: '${action}'\x1b[0m\n`;
   },
 };
 
