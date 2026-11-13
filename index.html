@@ -24,7 +24,7 @@
         <span class="status-dot"></span>
         <span id="statusText">System Ready</span>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="runQuickDemo()">⚡ Run Full Demo</button>
+      <button class="btn btn-primary btn-sm" id="fullDemoBtn" onclick="toggleFullDemo()">⚡ Run Full Demo</button>
       <button class="btn btn-warning btn-sm" onclick="resetSession()">🔄 Restart OS</button>
       <button class="btn btn-outline btn-sm" onclick="clearTerminal()">🧹 Clear Terminal</button>
     </div>
@@ -42,22 +42,22 @@
           <h2>Process Management</h2>
         </div>
         <div class="card-body">
-          <div class="form-row">
-            <div class="form-group flex-1">
+          <div class="form-row-grid">
+            <div class="form-group">
               <label>Name</label>
               <input type="text" id="procName" value="P1" placeholder="e.g. P1">
             </div>
-            <div class="form-group flex-1">
+            <div class="form-group">
               <label>Burst</label>
-              <input type="number" id="procBurst" value="5" min="1" placeholder="CPU burst">
+              <input type="number" id="procBurst" value="5" min="1" placeholder="Burst">
             </div>
-            <div class="form-group flex-1">
+            <div class="form-group">
               <label>Priority</label>
-              <input type="number" id="procPriority" value="2" min="1" placeholder="Priority">
+              <input type="number" id="procPriority" value="2" min="1" placeholder="Prio">
             </div>
-            <div class="form-group flex-1">
+            <div class="form-group">
               <label>Arrival</label>
-              <input type="number" id="procArrival" value="0" min="0" placeholder="Arrival">
+              <input type="number" id="procArrival" value="0" min="0" placeholder="Arr">
             </div>
           </div>
           <div class="btn-group mt-2">
@@ -70,8 +70,8 @@
           <div class="divider"></div>
 
           <div class="form-inline">
-            <label>Terminate Process by PID:</label>
-            <input type="number" id="killPid" value="0" min="0" style="width: 80px;">
+            <label>Terminate by PID:</label>
+            <input type="number" id="killPid" value="0" min="0" style="width: 70px;">
             <button class="btn btn-danger btn-sm" onclick="killProcess()">Kill</button>
           </div>
         </div>
@@ -84,7 +84,7 @@
           <h2>CPU Scheduling Algorithms</h2>
         </div>
         <div class="card-body">
-          <p class="section-desc">Run scheduling simulations on current processes with Gantt chart generation:</p>
+          <p class="section-desc">Run scheduling simulations on current processes with Gantt charts:</p>
           <div class="grid-buttons">
             <button class="btn btn-module" onclick="runCommand('schedule fcfs')">
               <strong>FCFS</strong>
@@ -106,7 +106,7 @@
 
           <div class="form-inline mt-3">
             <label>Round Robin (Quantum):</label>
-            <input type="number" id="rrQuantum" value="2" min="1" style="width: 70px;">
+            <input type="number" id="rrQuantum" value="2" min="1" style="width: 60px;">
             <button class="btn btn-secondary btn-sm" onclick="runRR()">Run RR</button>
           </div>
 
@@ -125,17 +125,17 @@
           <h2>Memory Management (1024 MB Arena)</h2>
         </div>
         <div class="card-body">
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label>Process Name</label>
+          <div class="form-row-grid-3">
+            <div class="form-group">
+              <label>Process</label>
               <input type="text" id="memProcName" value="P1">
             </div>
-            <div class="form-group flex-1">
+            <div class="form-group">
               <label>Size (MB)</label>
               <input type="number" id="memSize" value="128" min="1" max="1024">
             </div>
-            <div class="form-group flex-1">
-              <label>Allocation Policy</label>
+            <div class="form-group">
+              <label>Policy</label>
               <select id="memPolicy">
                 <option value="ff">First Fit (ff)</option>
                 <option value="bf">Best Fit (bf)</option>
@@ -146,7 +146,7 @@
           <div class="btn-group mt-2">
             <button class="btn btn-primary" onclick="allocMemory()">📥 Allocate Memory</button>
             <button class="btn btn-outline" onclick="freeMemory()">📤 Free Memory</button>
-            <button class="btn btn-secondary" onclick="runCommand('mem_status')">🗺️ Show Memory Map</button>
+            <button class="btn btn-secondary" onclick="runCommand('mem_status')">🗺️ Show Map</button>
             <button class="btn btn-danger-outline" onclick="runCommand('mem_reset')">Reset</button>
           </div>
         </div>
@@ -162,11 +162,11 @@
           <div class="grid-buttons-2">
             <button class="btn btn-module" onclick="runCommand('producer_consumer')">
               <strong>Producer-Consumer</strong>
-              <small>Bounded-buffer using semaphores</small>
+              <small>Bounded-buffer semaphores</small>
             </button>
             <button class="btn btn-module" onclick="runBankers()">
               <strong>Banker's Algorithm</strong>
-              <small>Deadlock avoidance & safe sequence</small>
+              <small>Deadlock safety & sequence</small>
             </button>
           </div>
         </div>
@@ -180,7 +180,7 @@
         </div>
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group" style="width: 100px;">
+            <div class="form-group" style="width: 85px;">
               <label>Frames</label>
               <input type="number" id="pageFrames" value="3" min="1" max="10">
             </div>
@@ -206,7 +206,7 @@
         </div>
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group" style="width: 110px;">
+            <div class="form-group" style="width: 95px;">
               <label>Initial Head</label>
               <input type="number" id="diskHead" value="53" min="0" max="199">
             </div>
@@ -236,7 +236,7 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <div class="terminal-title">minios-session [interactive output]</div>
+          <div class="terminal-title" id="terminalTitle">minios-session [interactive output]</div>
           <div class="terminal-actions">
             <button class="btn-icon" onclick="copyTerminalText()" title="Copy output">📋</button>
             <button class="btn-icon" onclick="clearTerminal()" title="Clear terminal">🧹</button>
