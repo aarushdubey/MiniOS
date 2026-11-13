@@ -94,6 +94,14 @@ async function runCommand(cmd, timeoutSeconds = 6.0) {
   }
 }
 
+// Toggle card collapse / expand
+function toggleCard(header) {
+  const card = header.closest(".card");
+  if (card) {
+    card.classList.toggle("collapsed");
+  }
+}
+
 // Module 1: Process Management Actions
 function createProcess() {
   const name = document.getElementById("procName").value.trim() || "P1";

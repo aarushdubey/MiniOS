@@ -105,30 +105,35 @@ body {
 
 /* Controls Panel (Left) */
 .controls-panel {
-  overflow-y: auto;
+  overflow-y: scroll; /* always show scrollbar so content is never squished */
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   border-right: 1px solid var(--border-color);
   background: #0b1120;
+  min-height: 0;
 }
 
 .controls-panel::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 .controls-panel::-webkit-scrollbar-thumb {
   background: var(--bg-tertiary);
   border-radius: 4px;
 }
+.controls-panel::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
 
 /* Cards */
 .card {
+  flex-shrink: 0; /* CRITICAL: Prevent flexbox from squishing cards vertically */
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  transition: border-color 0.15s ease;
 }
 
 .card-header {
@@ -138,6 +143,12 @@ body {
   padding: 10px 14px;
   background-color: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-header:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .card-icon {
@@ -148,6 +159,25 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: #e2e8f0;
+}
+
+.chevron {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.card.collapsed .chevron {
+  transform: rotate(-90deg);
+}
+
+.card.collapsed .card-body {
+  display: none;
+}
+
+.card.collapsed {
+  border-bottom-color: var(--border-color);
 }
 
 .card-body {
