@@ -5,8 +5,7 @@
 
 const terminal = document.getElementById("terminalOutput");
 const cliInput = document.getElementById("cliInput");
-const statusDot = document.querySelector(".status-dot");
-const statusText = document.getElementById("statusText");
+const statusBadge = document.getElementById("statusBadge");
 const fullDemoBtn = document.getElementById("fullDemoBtn");
 const terminalTitle = document.getElementById("terminalTitle");
 
@@ -57,13 +56,16 @@ function appendToTerminal(rawText, isUserInput = false, isStepBanner = false) {
 }
 
 function setStatus(text, isBusy = false) {
-  statusText.innerText = text;
+  if (!statusBadge) return;
+  statusBadge.innerText = "Status: " + text;
   if (isBusy) {
-    statusDot.style.backgroundColor = "#eab308";
-    statusDot.style.boxShadow = "0 0 8px #eab308";
+    statusBadge.style.backgroundColor = "#fef3c7";
+    statusBadge.style.borderColor = "#fcd34d";
+    statusBadge.style.color = "#92400e";
   } else {
-    statusDot.style.backgroundColor = "#22c55e";
-    statusDot.style.boxShadow = "0 0 8px #22c55e";
+    statusBadge.style.backgroundColor = "#ecfdf5";
+    statusBadge.style.borderColor = "#a7f3d0";
+    statusBadge.style.color = "#065f46";
   }
 }
 
@@ -961,18 +963,18 @@ const demoSteps = [
 async function toggleFullDemo() {
   if (isDemoRunning) {
     isDemoRunning = false;
-    fullDemoBtn.innerText = "⚡ Run Full Demo";
-    fullDemoBtn.className = "btn btn-primary btn-sm";
-    setStatus("Demo Stopped by User", false);
-    appendToTerminal('<span class="ansi-yellow">⏹️ Full Demo stopped by user.</span>');
+    fullDemoBtn.innerText = "Run Full Demo";
+    fullDemoBtn.className = "btn btn-primary";
+    setStatus("Demo Stopped", false);
+    appendToTerminal('<span class="ansi-yellow">[Demo stopped by user]</span>');
     return;
   }
 
   isDemoRunning = true;
-  fullDemoBtn.innerText = "⏹️ Stop Demo";
-  fullDemoBtn.className = "btn btn-danger btn-sm";
+  fullDemoBtn.innerText = "Stop Demo";
+  fullDemoBtn.className = "btn btn-danger";
 
-  appendToTerminal('<span class="ansi-cyan">========================================================================\n🚀 Starting Step-by-Step MiniOS Full OS Demonstration (24 Steps)\n   Commands will run one by one with live updates...\n========================================================================</span>');
+  appendToTerminal('<span class="ansi-cyan">========================================================================\nStarting MiniOS Automated Demonstration (24 Steps)\nExecuting operations sequentially...\n========================================================================</span>');
 
   for (let i = 0; i < demoSteps.length; i++) {
     if (!isDemoRunning) break;
@@ -981,8 +983,8 @@ async function toggleFullDemo() {
     const stepNum = i + 1;
     const progressText = `Step ${stepNum}/${demoSteps.length}: ${step.label}`;
 
-    setStatus(`Running: ${progressText}`, true);
-    terminalTitle.innerText = `[Demo Step ${stepNum}/24] ${step.label}`;
+    setStatus(`Step ${stepNum}/${demoSteps.length}`, true);
+    if (terminalTitle) terminalTitle.innerText = `[Step ${stepNum}/24] ${step.label}`;
     appendToTerminal(`[Step ${stepNum} of ${demoSteps.length}] ${step.label}`, false, true);
 
     if (step.action === "bankers") {
@@ -992,28 +994,28 @@ async function toggleFullDemo() {
     }
 
     if (isDemoRunning && i < demoSteps.length - 1) {
-      await sleep(1000);
+      await sleep(900);
     }
   }
 
   if (isDemoRunning) {
-    appendToTerminal('<span class="ansi-green">========================================================================\n🎉 Full Step-by-Step OS Demo Completed Successfully!\n   All 24 operations executed across Processes, CPU, Memory, Sync, Paging & Disk.\n========================================================================</span>');
-    setStatus("Demo Completed", false);
+    appendToTerminal('<span class="ansi-green">========================================================================\nDemonstration Completed Successfully.\nAll 24 operations simulated across Process, CPU, Memory, Sync, Paging & Disk.\n========================================================================</span>');
+    setStatus("Ready", false);
   }
 
   isDemoRunning = false;
-  fullDemoBtn.innerText = "⚡ Run Full Demo";
-  fullDemoBtn.className = "btn btn-primary btn-sm";
-  terminalTitle.innerText = "minios-session [interactive output]";
+  fullDemoBtn.innerText = "Run Full Demo";
+  fullDemoBtn.className = "btn btn-primary";
+  if (terminalTitle) terminalTitle.innerText = "MiniOS Console (Terminal Output)";
 }
 
 async function resetSession() {
   if (isDemoRunning) {
     isDemoRunning = false;
-    fullDemoBtn.innerText = "⚡ Run Full Demo";
-    fullDemoBtn.className = "btn btn-primary btn-sm";
+    fullDemoBtn.innerText = "Run Full Demo";
+    fullDemoBtn.className = "btn btn-primary";
   }
-  setStatus("Restarting MiniOS...", true);
+  setStatus("Restarting...", true);
 
   if (useLocalServer) {
     try {
@@ -1021,8 +1023,8 @@ async function resetSession() {
     } catch {}
   }
   StandaloneOS.reset();
-  appendToTerminal('<span class="ansi-yellow">🔄 MiniOS process session restarted cleanly.</span>');
-  setStatus("System Ready", false);
+  appendToTerminal('<span class="ansi-yellow">[MiniOS session restarted]</span>');
+  setStatus("Ready", false);
 }
 
 function clearTerminal() {
