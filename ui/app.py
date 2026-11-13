@@ -9,7 +9,6 @@ import http.server
 import json
 import os
 import queue
-import select
 import subprocess
 import sys
 import threading
@@ -22,7 +21,7 @@ BINARY_PATH = os.path.join(PROJECT_ROOT, "minios.exe" if os.name == "nt" else "m
 
 
 class MiniOSSession:
-    """Manages a persistent MiniOS interactive process session."""
+    """Manages a persistent MiniOS interactive process session with prompt synchronization."""
 
     def __init__(self):
         self.proc = None
@@ -75,55 +74,60 @@ class MiniOSSession:
             self.reader_thread = threading.Thread(target=reader, daemon=True)
             self.reader_thread.start()
 
-            # Drain initial banner and first prompt
+            # Drain initial banner and initial prompt
             time.sleep(0.15)
-            self._drain()
+            while not self.output_queue.empty():
+                try:
+                    self.output_queue.get_nowait()
+                except queue.Empty:
+                    break
 
-    def _drain(self, timeout=0.25):
-        """Collects any pending characters from the output queue."""
-        chars = []
-        end_time = time.time() + timeout
-        while time.time() < end_time:
-            try:
-                c = self.output_queue.get(timeout=0.03)
-                chars.append(c)
-                # If we get chars, give a tiny bit more time for full burst
-                end_time = max(end_time, time.time() + 0.05)
-            except queue.Empty:
-                break
-        return "".join(chars)
-
-    def execute(self, cmd_string, wait_seconds=0.3):
-        """Sends command(s) and waits for output."""
+    def execute(self, cmd_string, max_timeout=6.0):
+        """
+        Sends command(s) and waits until the prompt 'minios>' returns.
+        Guarantees complete output without premature cutoff.
+        """
         with self.lock:
             if not self.proc or self.proc.poll() is not None:
                 self.start()
 
-            # Drain prior output
-            self._drain(timeout=0.05)
+            # Drain any prior leftover in queue
+            while not self.output_queue.empty():
+                try:
+                    self.output_queue.get_nowait()
+                except queue.Empty:
+                    break
 
             try:
-                # Ensure trailing newline
                 to_send = cmd_string.strip() + "\n"
                 self.proc.stdin.write(to_send)
                 self.proc.stdin.flush()
             except Exception as e:
                 self.start()
-                return f"[Error writing to MiniOS process: {e}]"
+                return f"[Error communicating with MiniOS process: {e}]"
 
-            # Read response
-            output = self._drain(timeout=wait_seconds)
-            # Remove repeated shell prompt prefix/suffix if desired, but keep full raw text
+            chars = []
+            start_time = time.time()
+
+            while time.time() - start_time < max_timeout:
+                try:
+                    c = self.output_queue.get(timeout=0.05)
+                    chars.append(c)
+
+                    # Look for prompt in the tail of output
+                    tail = "".join(chars[-30:])
+                    if "minios>" in tail:
+                        time.sleep(0.02)
+                        while not self.output_queue.empty():
+                            chars.append(self.output_queue.get_nowait())
+                        break
+                except queue.Empty:
+                    if self.proc.poll() is not None:
+                        break
+                    continue
+
+            output = "".join(chars)
             return output
-
-    def run_batch(self, commands, delay=0.15):
-        """Runs a list of commands in sequence."""
-        combined_output = []
-        for cmd in commands:
-            out = self.execute(cmd, wait_seconds=delay)
-            if out:
-                combined_output.append(out)
-        return "".join(combined_output)
 
 
 session = MiniOSSession()
@@ -135,7 +139,6 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=ui_dir, **kwargs)
 
     def log_message(self, format, *args):
-        # Concise logging
         pass
 
     def do_POST(self):
@@ -147,23 +150,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             data = json.loads(body) if body else {}
 
             cmd = data.get("command", "")
-            wait_time = float(data.get("wait", 0.25))
+            timeout = float(data.get("timeout", 6.0))
 
-            output = session.execute(cmd, wait_seconds=wait_time)
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"output": output, "status": "ok"}).encode("utf-8"))
-
-        elif parsed.path == "/api/batch":
-            content_length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(content_length).decode("utf-8")
-            data = json.loads(body) if body else {}
-
-            commands = data.get("commands", [])
-            output = session.run_batch(commands)
+            output = session.execute(cmd, max_timeout=timeout)
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -180,8 +169,6 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "reset_complete"}).encode("utf-8"))
 
         elif parsed.path == "/api/bankers":
-            # Banker's algorithm with piped input
-            # Standard textbook example
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body) if body else {}
@@ -190,7 +177,6 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                 "input",
                 "5\n3\n0 1 0\n2 0 0\n3 0 2\n2 1 1\n0 0 2\n7 5 3\n3 2 2\n9 0 2\n2 2 2\n4 3 3\n3 3 2\n",
             )
-            # Run banker's as a one-shot process to handle all stdin prompts cleanly
             full_input = f"bankers\n{raw_input}\nexit\n"
             try:
                 res = subprocess.run(
@@ -199,11 +185,11 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                     cwd=PROJECT_ROOT,
                     capture_output=True,
                     text=True,
-                    timeout=3,
+                    timeout=4,
                 )
                 output = res.stdout
             except Exception as e:
-                output = f"Error running Bankers: {e}"
+                output = f"Error running Banker's algorithm: {e}"
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -226,13 +212,11 @@ def run():
     server = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), RequestHandler)
     print("=" * 60)
     print(f"🚀 MiniOS Web UI running at: http://127.0.0.1:{PORT}")
-    print("Open the URL in any web browser to test MiniOS interactively.")
-    print("Press Ctrl+C to stop the server.")
+    print("Open the URL in your browser to test MiniOS.")
     print("=" * 60)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nStopping server...")
         if session.proc:
             session.proc.terminate()
         server.server_close()
